@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コメント入力</title>
+<script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; }
+  .comment-list { margin-bottom: 20px; }
+  .comment-item { border-bottom: 1px solid #ddd; padding: 5px 0; }
+  .comment-input-container { display: flex; align-items: center; margin-bottom: 10px; }
+  .comment-input, .name-input { flex: 1; padding: 10px; font-size: 16px; margin-right: 10px; }
+  .color-picker { margin-right: 10px; }
+  .submit-btn { padding: 10px 20px; font-size: 16px; }
+</style>
+</head>
+<body>
+
+<h1>コメントを入力してください</h1>
+<div class="comment-list" id="comment-list"></div>
+
+<div class="comment-input-container">
+  <input type="text" id="name-input" class="name-input" placeholder="氏名（ニックネーム可）">
+</div>
+<div class="comment-input-container">
+  <input type="color" id="color-picker" class="color-picker" value="#000000">
+  <input type="text" id="comment-input" class="comment-input" placeholder="コメントを入力...">
+  <button id="submit-btn" class="submit-btn">送信</button>
+</div>
+
+<script>
+  // Firebaseの設定
+  var firebaseConfig = {
+    apiKey: "AIzaSyAH3WRPedxRV7fd7JGs1L6NzCgJuyktSnM",
+    authDomain: "commentformstest.firebaseapp.com",
+    databaseURL: "https://commentformstest-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "commentformstest",
+    storageBucket: "commentformstest.appspot.com",
+    messagingSenderId: "999480678615",
+    appId: "1:999480678615:web:34b5a758b7401a72827892"
+  };
+  // Firebaseを初期化
+  firebase.initializeApp(firebaseConfig);
+  var database = firebase.database();
+
+  // コメントを送信
+  document.getElementById('submit-btn').addEventListener('click', function() {
+    var nameInput = document.getElementById('name-input');
+    var commentInput = document.getElementById('comment-input');
+    var colorPicker = document.getElementById('color-picker');
+    var name = nameInput.value;
+    var comment = commentInput.value;
+    var color = colorPicker.value;
+    var timestamp = new Date().toISOString();
+    if (comment) {
+      database.ref('comments').push({
+        name: name,
+        comment: comment,
+        color: color,
+        timestamp: timestamp
+      }).then(function() {
+        console.log('コメントが送信されました');
+      }).catch(function(error) {
+        console.error('エラーが発生しました:', error);
+      });
+      commentInput.value = '';
+    }
+  });
+
+  // コメントを取得して表示
+  database.ref('comments').orderByChild('timestamp').on('value', function(snapshot) {
+    var commentList = document.getElementById('comment-list');
+    commentList.innerHTML = '';
+    snapshot.forEach(function(childSnapshot) {
+      var childData = childSnapshot.val();
+      var commentItem = document.createElement('div');
+      commentItem.className = 'comment-item';
+      commentItem.style.color = childData.color || '#000'; // デフォルトは黒
+      commentItem.textContent = (childData.name ? childData.name + ': ' : '') + childData.comment + ' (' + new Date(childData.timestamp).toLocaleString() + ')';
+      commentList.appendChild(commentItem);
+    });
+  });
+</script>
+
+</body>
+</html>
