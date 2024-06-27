@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>コメント入力</title>
-  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; }
-    .comment-list { margin-bottom: 20px; }
-    .comment-item { border-bottom: 1px solid #ddd; padding: 5px 0; }
-    .comment-input-container { display: flex; align-items: center; margin-bottom: 10px; }
-    .comment-input, .name-input { flex: 1; padding: 10px; font-size: 16px; margin-right: 10px; }
-    .color-picker { margin-right: 10px; }
-    .submit-btn { padding: 10px 20px; font-size: 16px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コメント入力</title>
+<script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; }
+  .comment-list { margin-bottom: 20px; }
+  .comment-item { border-bottom: 1px solid #ddd; padding: 5px 0; }
+  .comment-input-container { display: flex; align-items: center; margin-bottom: 10px; }
+  .comment-input, .name-input { flex: 1; padding: 10px; font-size: 16px; margin-right: 10px; }
+  .color-picker { margin-right: 10px; }
+  .submit-btn { padding: 10px 20px; font-size: 16px; }
+</style>
 </head>
 <body>
 
@@ -33,13 +33,13 @@
 <script>
   // Firebaseの設定
   var firebaseConfig = {
-    apiKey: "YOUR_FIREBASE_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    apiKey: "AIzaSyAH3WRPedxRV7fd7JGs1L6NzCgJuyktSnM",
+    authDomain: "commentformstest.firebaseapp.com",
     databaseURL: "https://commentformstest-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    projectId: "commentformstest",
+    storageBucket: "commentformstest.appspot.com",
+    messagingSenderId: "999480678615",
+    appId: "1:999480678615:web:34b5a758b7401a72827892"
   };
   // Firebaseを初期化
   firebase.initializeApp(firebaseConfig);
