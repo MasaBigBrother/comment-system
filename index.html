@@ -185,7 +185,11 @@
         votes: votes,
         timestamp: new Date().toISOString()
       };
-      database.ref('voteResults').set(voteResults);
+      database.ref('voteResults').set(voteResults).then(function() {
+        console.log('投票結果が送信されました');
+      }).catch(function(error) {
+        console.error('投票結果の送信エラー:', error);
+      });
     });
   }
 </script>
