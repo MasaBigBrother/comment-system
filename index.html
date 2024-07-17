@@ -7,22 +7,42 @@
 <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
 <style>
-  body { font-family: Arial, sans-serif; }
-  .comment-list { margin-bottom: 20px; }
-  .comment-item { border-bottom: 1px solid #ddd; padding: 5px 0; }
-  .comment-input-container { display: flex; align-items: center; margin-bottom: 10px; }
-  .comment-input, .name-input { flex: 1; padding: 10px; font-size: 16px; margin-right: 10px; }
+  body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
+  h1 { text-align: center; color: #333; }
+  .comment-list { margin-bottom: 20px; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+  .comment-item { border-bottom: 1px solid #ddd; padding: 10px 0; }
+  .comment-input-container { display: flex; align-items: center; margin-bottom: 20px; }
+  .comment-input, .name-input { flex: 1; padding: 10px; font-size: 16px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; }
   .color-picker { margin-right: 10px; }
-  .submit-btn { padding: 10px 20px; font-size: 16px; }
+  .submit-btn { padding: 10px 20px; font-size: 16px; border: none; background: #5cb85c; color: #fff; border-radius: 4px; cursor: pointer; }
+  .submit-btn:hover { background: #4cae4c; }
+  .vote-btn { width: 50px; height: 50px; margin-right: 10px; font-size: 18px; color: white; cursor: pointer; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transition: transform 0.2s, background 0.2s; }
+  .vote-btn:hover { transform: scale(1.1); }
+  .vote-btn.selected { transform: scale(1.2); border: 2px solid #000; }
+  #vote-a { background-color: #d9534f; }
+  #vote-b { background-color: #0275d8; }
+  #vote-c { background-color: #f0ad4e; color: black; }
+  #vote-d { background-color: #5bc0de; }
+  #timer { font-size: 24px; margin-bottom: 20px; color: #555; }
+  #countdown-bar { height: 20px; background-color: #e0e0e0; border-radius: 10px; overflow: hidden; box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.1); }
+  #countdown-fill { height: 100%; background-color: #5cb85c; transition: width 1s linear; }
 </style>
 </head>
 <body>
 
 <h1>コメントを入力してください</h1>
+<div id="timer">タイマー: <span id="time-left"></span>秒</div>
+<div id="countdown-bar">
+  <div id="countdown-fill"></div>
+</div>
 <div class="comment-list" id="comment-list"></div>
 
 <div class="comment-input-container">
   <input type="text" id="name-input" class="name-input" placeholder="氏名（ニックネーム可）">
+  <button id="vote-a" class="vote-btn">A</button>
+  <button id="vote-b" class="vote-btn">B</button>
+  <button id="vote-c" class="vote-btn">C</button>
+  <button id="vote-d" class="vote-btn">D</button>
 </div>
 <div class="comment-input-container">
   <input type="color" id="color-picker" class="color-picker" value="#000000">
@@ -45,6 +65,33 @@
   firebase.initializeApp(firebaseConfig);
   var database = firebase.database();
 
+  // 投票ボタンの状態を管理する変数
+  var votingEnabled = false;
+  var selectedVote = null;
+  var timerInterval;
+
+  // 投票ボタンのクリックイベント
+  document.getElementById('vote-a').addEventListener('click', function() { vote('A'); });
+  document.getElementById('vote-b').addEventListener('click', function() { vote('B'); });
+  document.getElementById('vote-c').addEventListener('click', function() { vote('C'); });
+  document.getElementById('vote-d').addEventListener('click', function() { vote('D'); });
+
+  function vote(choice) {
+    if (votingEnabled) {
+      selectedVote = choice;
+      clearSelected();
+      document.getElementById('vote-' + choice.toLowerCase()).classList.add('selected');
+      console.log('Selected vote:', choice);
+    }
+  }
+
+  function clearSelected() {
+    var buttons = document.querySelectorAll('.vote-btn');
+    buttons.forEach(function(button) {
+      button.classList.remove('selected');
+    });
+  }
+
   // コメントを送信
   document.getElementById('submit-btn').addEventListener('click', function() {
     var nameInput = document.getElementById('name-input');
@@ -59,13 +106,16 @@
         name: name,
         comment: comment,
         color: color,
-        timestamp: timestamp
+        timestamp: timestamp,
+        vote: selectedVote
       }).then(function() {
         console.log('コメントが送信されました');
       }).catch(function(error) {
         console.error('エラーが発生しました:', error);
       });
       commentInput.value = '';
+      selectedVote = null;
+      clearSelected();
     }
   });
 
@@ -82,6 +132,62 @@
       commentList.appendChild(commentItem);
     });
   });
+
+  // カウントダウンタイマーの設定
+  function startCountdown(duration) {
+    clearInterval(timerInterval);
+    var timeLeft = duration;
+    var countdownBar = document.getElementById('countdown-fill');
+    var timerDisplay = document.getElementById('time-left');
+    votingEnabled = true;
+
+    timerInterval = setInterval(function() {
+      timeLeft--;
+      timerDisplay.textContent = timeLeft;
+      countdownBar.style.width = (timeLeft / duration) * 100 + '%';
+
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        votingEnabled = false;
+        submitVoteResults();
+      }
+    }, 1000);
+  }
+
+  // Firebaseからタイマーの設定を受け取る
+  database.ref('timer').on('value', function(snapshot) {
+    var timerData = snapshot.val();
+    if (timerData) {
+      if (timerData.running) {
+        startCountdown(timerData.duration);
+      } else {
+        clearInterval(timerInterval);
+        document.getElementById('time-left').textContent = timerData.duration;
+        document.getElementById('countdown-fill').style.width = '100%';
+      }
+    }
+  });
+
+  // 投票結果を送信
+  function submitVoteResults() {
+    database.ref('comments').once('value').then(function(snapshot) {
+      var votes = { A: 0, B: 0, C: 0, D: 0 };
+      var totalVotes = 0;
+      snapshot.forEach(function(childSnapshot) {
+        var vote = childSnapshot.val().vote;
+        if (vote && votes[vote] !== undefined) {
+          votes[vote]++;
+          totalVotes++;
+        }
+      });
+      var voteResults = {
+        totalVotes: totalVotes,
+        votes: votes,
+        timestamp: new Date().toISOString()
+      };
+      database.ref('voteResults').set(voteResults);
+    });
+  }
 </script>
 
 </body>
