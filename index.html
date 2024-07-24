@@ -174,7 +174,8 @@
       var votes = { A: 0, B: 0, C: 0, D: 0 };
       var totalVotes = 0;
       snapshot.forEach(function(childSnapshot) {
-        var vote = childSnapshot.val().vote;
+        var childData = childSnapshot.val();
+        var vote = childData.vote;
         if (vote && votes[vote] !== undefined) {
           votes[vote]++;
           totalVotes++;
